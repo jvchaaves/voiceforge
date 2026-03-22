@@ -5,8 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Waves, Copy, Download, RotateCcw, Sparkles } from "lucide-react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useCodeGeneration } from "@/hooks/useCodeGeneration";
-import { VoiceRecorder } from "@/components/VoiceRecorder";
-import { TranscriptDisplay } from "@/components/TranscriptDisplay";
+import { PromptInput } from "@/components/PromptInput";
 import { CodePreview } from "@/components/CodePreview";
 import { GenerationHistory } from "@/components/GenerationHistory";
 import type { GenerationHistoryItem } from "@/lib/types";
@@ -22,13 +21,17 @@ export default function BuilderPage() {
 
   const handleStopAndGenerate = useCallback(() => {
     recorder.stopRecording();
-    // Small delay to let Web Speech API finalize the transcript
     setTimeout(() => {
       const finalText = recorder.getFinalTranscript();
       if (finalText) {
         generation.generate(finalText, generation.code || undefined);
       }
     }, 500);
+  }, [recorder, generation]);
+
+  const handleTextSubmit = useCallback((text: string) => {
+    recorder.setManualTranscript(text);
+    generation.generate(text, generation.code || undefined);
   }, [recorder, generation]);
 
   const handleCopyCode = useCallback(() => {
@@ -55,11 +58,6 @@ export default function BuilderPage() {
     },
     [generation]
   );
-
-  const handleTextSubmit = useCallback((text: string) => {
-    recorder.setManualTranscript(text);
-    generation.generate(text, generation.code || undefined);
-  }, [recorder, generation]);
 
   const handleReset = useCallback(() => {
     recorder.reset();
@@ -120,22 +118,18 @@ export default function BuilderPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left sidebar */}
           <div className="lg:col-span-4 space-y-4">
-            <VoiceRecorder
-              status={recorder.status}
+            <PromptInput
+              onSubmitText={handleTextSubmit}
+              isGenerating={generation.isLoading}
+              recorderStatus={recorder.status}
               duration={recorder.duration}
               analyserNode={recorder.analyserNode}
               isRecording={recorder.isRecording}
-              isGenerating={generation.isLoading}
-              onStart={handleStartRecording}
-              onStop={handleStopAndGenerate}
-            />
-
-            <TranscriptDisplay
               transcript={recorder.transcript}
               isTranscribing={recorder.isTranscribing}
-              isGenerating={generation.isLoading}
               speechSupported={recorder.speechSupported}
-              onSubmitText={handleTextSubmit}
+              onStartRecording={handleStartRecording}
+              onStopRecording={handleStopAndGenerate}
             />
 
             {/* Status */}
@@ -153,18 +147,16 @@ export default function BuilderPage() {
               <div className="glass rounded-2xl p-4 border-red-500/20">
                 <p className="text-sm text-red-400">{generation.error}</p>
                 <p className="text-xs text-zinc-600 mt-1">
-                  Verifique se a GROQ_API_KEY está configurada no .env.local
+                  Verifique se a GROQ_API_KEY está configurada no .env
                 </p>
               </div>
             )}
 
             {generation.code && !generation.isLoading && (
               <div className="glass rounded-2xl p-4">
-                <p className="text-xs text-zinc-500 mb-2">
-                  💡 Grave novamente para iterar sobre o código atual
-                </p>
-                <p className="text-xs text-zinc-600">
-                  Ex: &ldquo;muda o botão pra vermelho&rdquo; ou &ldquo;adiciona um campo de data&rdquo;
+                <p className="text-xs text-zinc-500">
+                  Digite ou grave novamente para iterar sobre o código atual.
+                  Ex: &ldquo;muda o botão pra vermelho&rdquo;
                 </p>
               </div>
             )}
