@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Waves, Copy, Download, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, Waves, Copy, Download, RotateCcw, Check } from "lucide-react";
+import { useState } from "react";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useCodeGeneration } from "@/hooks/useCodeGeneration";
 import { PromptInput } from "@/components/PromptInput";
@@ -13,6 +14,7 @@ import type { GenerationHistoryItem } from "@/lib/types";
 export default function BuilderPage() {
   const recorder = useVoiceRecorder();
   const generation = useCodeGeneration();
+  const [copied, setCopied] = useState(false);
 
   const handleStartRecording = useCallback(() => {
     recorder.reset();
@@ -37,6 +39,8 @@ export default function BuilderPage() {
   const handleCopyCode = useCallback(() => {
     if (generation.code) {
       navigator.clipboard.writeText(generation.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   }, [generation.code]);
 
@@ -65,59 +69,62 @@ export default function BuilderPage() {
   }, [recorder, generation]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Background orbs */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-purple-600/5 blur-[128px]" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/5 blur-[128px]" />
+    <div className="min-h-screen bg-[#050505] noise">
+      {/* Background */}
+      <div className="fixed inset-0 dot-grid pointer-events-none opacity-50" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[10%] w-[400px] h-[400px] rounded-full bg-violet-600/[0.04] blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[300px] h-[300px] rounded-full bg-fuchsia-600/[0.03] blur-[100px]" />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-zinc-500 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+      <header className="relative z-10 flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04] bg-[#050505]/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-zinc-600 hover:text-white transition-colors p-1 -ml-1">
+            <ArrowLeft className="w-4 h-4" />
           </Link>
+          <div className="w-px h-4 bg-white/[0.06]" />
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Waves className="w-3.5 h-3.5 text-white" />
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+              <Waves className="w-3 h-3 text-white" />
             </div>
-            <span className="font-semibold tracking-tight">VoiceForge</span>
-            <span className="text-xs text-zinc-600 ml-1">Builder</span>
+            <span className="text-sm font-medium tracking-tight text-zinc-300">VoiceForge</span>
+            <span className="text-[10px] font-mono text-zinc-700 bg-white/[0.03] px-2 py-0.5 rounded-md border border-white/[0.04]">builder</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {generation.code && (
             <>
               <button
                 onClick={handleCopyCode}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white glass glass-hover transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-zinc-500 hover:text-white bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] hover:bg-white/[0.04] transition-all"
               >
-                <Copy className="w-3 h-3" /> Copiar
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? "Copiado" : "Copiar"}
               </button>
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white glass glass-hover transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-zinc-500 hover:text-white bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] hover:bg-white/[0.04] transition-all"
               >
-                <Download className="w-3 h-3" /> Baixar
+                <Download className="w-3 h-3" /> .jsx
               </button>
             </>
           )}
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white glass glass-hover transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-zinc-500 hover:text-white bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] hover:bg-white/[0.04] transition-all"
           >
-            <RotateCcw className="w-3 h-3" /> Reset
+            <RotateCcw className="w-3 h-3" />
           </button>
         </div>
       </header>
 
       {/* Main content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-5 py-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* Left sidebar */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 xl:col-span-3 space-y-4">
             <PromptInput
               onSubmitText={handleTextSubmit}
               isGenerating={generation.isLoading}
@@ -132,31 +139,20 @@ export default function BuilderPage() {
               onStopRecording={handleStopAndGenerate}
             />
 
-            {/* Status */}
-            {generation.status === "generating" && (
-              <div className="glass rounded-2xl p-4 flex items-center gap-3">
-                <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-                <div>
-                  <p className="text-sm text-zinc-300">Gerando código...</p>
-                  <p className="text-xs text-zinc-600">Llama 3.3 70B via Groq (open source)</p>
-                </div>
-              </div>
-            )}
-
             {generation.error && (
-              <div className="glass rounded-2xl p-4 border-red-500/20">
-                <p className="text-sm text-red-400">{generation.error}</p>
-                <p className="text-xs text-zinc-600 mt-1">
-                  Verifique se a GROQ_API_KEY está configurada no .env
+              <div className="rounded-2xl px-4 py-3 bg-red-500/[0.04] border border-red-500/[0.08]">
+                <p className="text-xs text-red-400">{generation.error}</p>
+                <p className="text-[10px] text-zinc-600 mt-1">
+                  Verifique se a GROQ_API_KEY está no .env
                 </p>
               </div>
             )}
 
             {generation.code && !generation.isLoading && (
-              <div className="glass rounded-2xl p-4">
-                <p className="text-xs text-zinc-500">
-                  Digite ou grave novamente para iterar sobre o código atual.
-                  Ex: &ldquo;muda o botão pra vermelho&rdquo;
+              <div className="rounded-2xl px-4 py-3 bg-white/[0.02] border border-white/[0.04]">
+                <p className="text-[11px] text-zinc-600 leading-relaxed">
+                  Envie outra mensagem para iterar sobre o código.
+                  Ex: <span className="text-zinc-400">&ldquo;muda o botão pra vermelho&rdquo;</span>
                 </p>
               </div>
             )}
@@ -168,13 +164,16 @@ export default function BuilderPage() {
           </div>
 
           {/* Right side - Preview */}
-          <div className="lg:col-span-8">
-            <div className="sticky top-6">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                <span className="text-xs text-zinc-600 ml-2 font-mono">preview</span>
+          <div className="lg:col-span-8 xl:col-span-9">
+            <div className="sticky top-5">
+              {/* Window bar */}
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]/80" />
+                </div>
+                <span className="text-[10px] text-zinc-700 font-mono ml-2">preview</span>
               </div>
               <CodePreview
                 code={generation.code}
