@@ -46,8 +46,7 @@ cd voiceforge
 npm install
 
 # Configure a API key (Groq é grátis)
-cp .env.example .env.local
-# Edite .env.local com sua key do https://console.groq.com/keys
+# Edite o .env com sua key do https://console.groq.com/keys
 
 # Rode o projeto
 npm run dev
