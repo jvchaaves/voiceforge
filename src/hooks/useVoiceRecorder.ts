@@ -11,6 +11,7 @@ export function useVoiceRecorder() {
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
   const [transcript, setTranscript] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -34,11 +35,11 @@ export function useVoiceRecorder() {
       setAnalyserNode(analyser);
 
       // Setup Web Speech API for real-time transcription
-      const SpeechRecognition =
+      const SpeechRecognitionAPI =
         window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
+      if (SpeechRecognitionAPI) {
+        const recognition = new SpeechRecognitionAPI();
         recognition.lang = "pt-BR";
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -65,11 +66,25 @@ export function useVoiceRecorder() {
         };
 
         recognition.onerror = (event) => {
-          console.error("Speech recognition error:", event.error);
+          // "network" = can't reach speech servers, "not-allowed" = mic denied
+          // "no-speech" = silence detected (not a real error)
+          if (event.error === "no-speech") return;
+
+          console.warn("Speech recognition unavailable:", event.error);
+          setSpeechSupported(false);
+          setIsTranscribing(false);
+
+          // Cleanup recognition on error
+          if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch {}
+            recognitionRef.current = null;
+          }
         };
 
         recognition.start();
         recognitionRef.current = recognition;
+      } else {
+        setSpeechSupported(false);
       }
 
       // Setup MediaRecorder
@@ -123,7 +138,7 @@ export function useVoiceRecorder() {
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try { recognitionRef.current.stop(); } catch {}
       recognitionRef.current = null;
     }
     if (
@@ -133,6 +148,11 @@ export function useVoiceRecorder() {
       mediaRecorderRef.current.stop();
       setStatus("processing");
     }
+  }, []);
+
+  const setManualTranscript = useCallback((text: string) => {
+    transcriptRef.current = text;
+    setTranscript(text);
   }, []);
 
   const reset = useCallback(() => {
@@ -158,8 +178,10 @@ export function useVoiceRecorder() {
     analyserNode,
     transcript,
     isTranscribing,
+    speechSupported,
     startRecording,
     stopRecording,
+    setManualTranscript,
     reset,
     getFinalTranscript,
     isRecording: status === "recording",

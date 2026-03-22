@@ -56,6 +56,11 @@ export default function BuilderPage() {
     [generation]
   );
 
+  const handleTextSubmit = useCallback((text: string) => {
+    recorder.setManualTranscript(text);
+    generation.generate(text, generation.code || undefined);
+  }, [recorder, generation]);
+
   const handleReset = useCallback(() => {
     recorder.reset();
     generation.reset();
@@ -129,6 +134,8 @@ export default function BuilderPage() {
               transcript={recorder.transcript}
               isTranscribing={recorder.isTranscribing}
               isGenerating={generation.isLoading}
+              speechSupported={recorder.speechSupported}
+              onSubmitText={handleTextSubmit}
             />
 
             {/* Status */}
