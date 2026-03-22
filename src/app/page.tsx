@@ -177,7 +177,7 @@ export default function Home() {
                       key={i}
                       className="w-1 bg-purple-400/60 rounded-full waveform-bar"
                       style={{
-                        height: `${12 + Math.sin(i * 0.8) * 10 + Math.random() * 8}px`,
+                        height: `${12 + Math.sin(i * 0.8) * 10 + ((i * 7 + 3) % 8)}px`,
                         animationDelay: `${i * 0.05}s`,
                       }}
                     />
